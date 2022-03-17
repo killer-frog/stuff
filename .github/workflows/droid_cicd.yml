@@ -2,7 +2,7 @@ name: Build and Deploy Android (Xamarin App)
 
 on:
   workflow_call:
-  inputs:
+    inputs:
       run-tests:
         description: Run tests
         type: boolean
