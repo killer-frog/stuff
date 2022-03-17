@@ -1,0 +1,91 @@
+name: Build and Deploy Android (Xamarin App)
+
+on:
+  workflow_call:
+  inputs:
+      run-tests:
+        description: Run tests
+        type: boolean
+        default: true
+      test-project:
+        description: Project Name for unit tests (i.e. BudgetPlanner.Test)
+        type: string
+        default: *.Test      
+      build-number-offset:
+        description: the offset for incrementing the build number (i.e 33928997)
+        type: string
+        default: 40  
+      build-source-folder:
+        description: the folder location for the source (i.e. ./BudgetPlanner/BudgetPlanner.Droid)
+        type: string
+        default: .
+      build-project:
+        description: Project file to be built (i.e. BudgetPlanner.Droid.csproj )
+        type: string
+        default: .      
+      appcenter_name:
+        description: the application name in android (i.e. budget-planner--android )
+        type: string
+        default: .
+      
+env:
+  project-file: ${{ inputs.build-source-folder }}/${{ inputs.build-project }}
+  
+jobs:  
+  unittests:      
+    name:  Unit Testing
+    if: ${{ inputs.test }}
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core SDK ${{ matrix.dotnet-version }}
+      uses: actions/setup-dotnet@v1.7.2
+      with:
+        dotnet-version: ${{ matrix.dotnet-version }}
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Unit Tests
+      run: dotnet test ${{ inputs.test-project }} --no-restore --verbosity Minimal
+      
+  android-adhoc-build-deploy:      
+    name:  AdHoc Android Build & Deploy
+    runs-on: windows-latest
+    needs: unittests
+    if: github.event_name == 'push' && github.ref != 'refs/heads/master'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2    
+      - name: Setup Android SDK Tools
+        uses: android-actions/setup-android@v2.0.2
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1.0.2
+      - name: run number with offset
+        id: get_buildnum
+        run: echo "::set-output name=buildnum::$((${{ github.run_number }}+${{ inputs.build-number-offset }} ))"     
+      - name: Set Android version
+        uses: damienaicheh/update-android-version-manifest-action@v1.0.0
+        with:
+             android-manifest-path: ${{ inputs.build-source-folder }}/Properties/AndroidManifest.xml
+             version-name: ${{ secrets.APP_VERSION }}
+             version-code: ${{ steps.get_buildnum.outputs.buildnum }}
+      - name: Restore Android
+        run: msbuild /t:Restore /p:Configuration=Release /p:AndroidPackageFormat=aab ${{ env.project-file }}       
+      - name: Compile Android
+        run: msbuild /p:AndroidBuildApplicationPackage=True /p:Configuration=Release /p:AndroidPackageFormat=aab ${{ env.project-file }}        
+      - name: Sign App
+        uses: r0adkll/sign-android-release@v1
+        id: sign_app
+        with:
+          releaseDirectory: ${{ inputs.build-source-folder }}/bin/Release
+          signingKeyBase64: ${{ secrets.KEYSTORE }}
+          alias: ${{ secrets.KEYSTORE_ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEYSTORE_PASSWORD }}
+      - name: Setup App Center CLI
+        run: npm install -g appcenter-cli
+      - name: Upload AddHoc Android app to App Center
+        if: github.ref != 'refs/heads/main'
+        run: appcenter distribute release --file ${{steps.sign_app.outputs.signedReleaseFile}} --app KillerFrog/${{ inputs.appcenter_name }} --group Collaborators --token ${{ secrets.APP_CENTER_TOKEN }}
+      - name: Upload Android app to Play Store via App Center
+        if: github.ref == 'refs/heads/main'
+        run: appcenter distribute release --file ${{steps.sign_app.outputs.signedReleaseFile}} --app KillerFrog/${{ inputs.appcenter_name }} --store Production --token ${{ secrets.APP_CENTER_TOKEN }}
