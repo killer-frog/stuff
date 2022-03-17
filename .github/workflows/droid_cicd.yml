@@ -7,9 +7,6 @@ on:
         description: Run tests
         type: boolean
         default: true
-      test-project:
-        description: Project Name for unit tests (i.e. BudgetPlanner.Test)
-        type: string 
       build-number-offset:
         description: the offset for incrementing the build number (i.e 33928997)
         type: string
@@ -30,26 +27,10 @@ on:
 env:
   project-file: ${{ inputs.build-source-folder }}/${{ inputs.build-project }}
   
-jobs:  
-  unittests:      
-    name:  Unit Testing
-    if: ${{ inputs.test }}
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup .NET Core SDK ${{ matrix.dotnet-version }}
-      uses: actions/setup-dotnet@v1.7.2
-      with:
-        dotnet-version: ${{ matrix.dotnet-version }}
-    - name: Install dependencies
-      run: dotnet restore
-    - name: Unit Tests
-      run: dotnet test ${{ inputs.test-project }} --no-restore --verbosity Minimal
-      
+jobs:        
   android-adhoc-build-deploy:      
-    name:  AdHoc Android Build & Deploy
+    name:  Android Build & Deploy
     runs-on: windows-latest
-    needs: unittests
     if: github.event_name == 'push' && github.ref != 'refs/heads/master'
     steps:
       - name: Checkout
