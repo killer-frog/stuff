@@ -9,8 +9,7 @@ on:
         default: true
       test-project:
         description: Project Name for unit tests (i.e. BudgetPlanner.Test)
-        type: string
-        default: *.Test      
+        type: string 
       build-number-offset:
         description: the offset for incrementing the build number (i.e 33928997)
         type: string
