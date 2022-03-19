@@ -23,6 +23,18 @@ on:
         description: the application name in android (i.e. budget-planner--android )
         type: string
         default: .
+    secrets:
+        KEYSTORE_ALIAS:
+          required : true
+        KEYSTORE:
+          required : true
+        KEYSTORE_PASSWORD:
+          required : true
+        APP_VERSION :
+          required : true        
+        APP_CENTER_TOKEN :
+          required : true
+      
       
 env:
   project-file: ${{ inputs.build-source-folder }}/${{ inputs.build-project }}
