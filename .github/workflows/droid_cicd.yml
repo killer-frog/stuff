@@ -24,7 +24,7 @@ on:
         type: string
         default: .
     secrets:
-        alias:
+        KEYSTORE_ALIAS:
           required : true
         KEYSTORE:
           required : true
@@ -70,7 +70,7 @@ jobs:
         with:
           releaseDirectory: ${{ inputs.build-source-folder }}/bin/Release
           signingKeyBase64: ${{ secrets.KEYSTORE }}
-          alias: ${{ secrets.alias }}
+          alias: ${{ secrets.KEYSTORE_ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEYSTORE_PASSWORD }}
       - name: Setup App Center CLI
