@@ -24,7 +24,7 @@ on:
         type: string
         default: .
     secrets:
-        alias:
+        KEYSTORE_ALIAS:
           required : true
         KEYSTORE:
           required : true
