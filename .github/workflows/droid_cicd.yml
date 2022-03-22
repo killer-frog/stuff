@@ -23,15 +23,13 @@ on:
         description: the application name in android (i.e. budget-planner--android )
         type: string
         default: .
-      keystore_password:
-        type : string
     secrets:
         KEYSTORE_ALIAS:
           required : true
         KEYSTORE:
           required : true
-#        KEYSTORE_PASSWORD:
-#          required : true
+        KEYSTORE_PASSWORD:
+          required : true
         APP_VERSION :
           required : true        
         APP_CENTER_TOKEN :
@@ -73,8 +71,8 @@ jobs:
           releaseDirectory: ${{ inputs.build-source-folder }}/bin/Release
           signingKeyBase64: ${{ secrets.KEYSTORE }}
           alias: ${{ secrets.KEYSTORE_ALIAS }}
-          keyStorePassword: ${{ inputs.keystore_password}}
-          keyPassword: ${{ inputs.keystore_password }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEYSTORE_PASSWORD  }}
       - name: Setup App Center CLI
         run: npm install -g appcenter-cli
       - name: Upload AddHoc Android app to App Center
