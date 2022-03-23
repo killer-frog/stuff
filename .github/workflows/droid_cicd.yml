@@ -77,7 +77,7 @@ jobs:
         run: npm install -g appcenter-cli
       - name: Upload AddHoc Android app to App Center
         if: github.ref != 'refs/heads/main'
-        run: appcenter distribute release --file ${{steps.sign_app.outputs.signedReleaseFile}} --app KillerFrog/${{ inputs.appcenter_name }} --group Collaborators --token ${{ secrets.APP_CENTER_TOKEN }}
+        run: appcenter distribute release --file ${{steps.sign_app.outputs.signedReleaseFile}} --app ${{ inputs.appcenter_name }} --group Collaborators --token ${{ secrets.APP_CENTER_TOKEN }}
       - name: Upload Android app to Play Store via App Center
         if: github.ref == 'refs/heads/main'
-        run: appcenter distribute release --file ${{steps.sign_app.outputs.signedReleaseFile}} --app KillerFrog/${{ inputs.appcenter_name }} --store Production --token ${{ secrets.APP_CENTER_TOKEN }}
+        run: appcenter distribute release --file ${{steps.sign_app.outputs.signedReleaseFile}} --app ${{ inputs.appcenter_name }} --store Production --token ${{ secrets.APP_CENTER_TOKEN }}
