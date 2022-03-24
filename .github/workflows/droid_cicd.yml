@@ -23,6 +23,10 @@ on:
         description: the application name in android (i.e. budget-planner--android )
         type: string
         default: .
+      release_track:
+        description: The Google play release track to use
+        type: string
+        default: Production
     secrets:
         KEYSTORE_ALIAS:
           required : true
@@ -80,4 +84,4 @@ jobs:
         run: appcenter distribute release --file ${{steps.sign_app.outputs.signedReleaseFile}} --app ${{ inputs.appcenter_name }} --group Collaborators --token ${{ secrets.APP_CENTER_TOKEN }}
       - name: Upload Android app to Play Store via App Center
         if: github.ref == 'refs/heads/main'
-        run: appcenter distribute release --file ${{steps.sign_app.outputs.signedReleaseFile}} --app ${{ inputs.appcenter_name }} --store Production --token ${{ secrets.APP_CENTER_TOKEN }}
+        run: appcenter distribute release --file ${{steps.sign_app.outputs.signedReleaseFile}} --app ${{ inputs.appcenter_name }} --store ${{ inputs.release_track }} --token ${{ secrets.APP_CENTER_TOKEN }}
