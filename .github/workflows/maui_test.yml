@@ -1,0 +1,35 @@
+name: 'Maui Unit Tests'
+
+on:
+  workflow_call:
+    inputs:
+      net_version:
+        required: true
+        type: string
+      project_name:
+        required: true
+        type: string
+jobs:
+  run_tests:
+    name:  Unit Testing
+    runs-on: windows-latest
+    
+    steps:      
+    - uses: actions/checkout@v4
+    - name: Setup .NET Core ${{ inputs.net_version }} SDK
+      uses: actions/setup-dotnet@v4
+      with:
+          dotnet-version: ${{ inputs.net_version }}
+
+    - name: Install MAUI workload
+      run: dotnet workload install maui
+
+   # - name: Install dependencies
+   #   run: dotnet restore
+
+    - name: Display Current Directory Path
+      run: pwd
+
+    - name: Unit Tests
+      run: dotnet test ${{ input.project_name }}.Tests/${{ input.project_name }}.Tests.csproj -f net${{ inputs.net_version }} --verbosity Minimal
+  
