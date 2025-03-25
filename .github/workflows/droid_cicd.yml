@@ -3,42 +3,27 @@ name: Build and Deploy Android (Xamarin App)
 on:
   workflow_call:
     inputs:
-      run-tests:
-        description: Run tests
-        type: boolean
-        default: true
-      build-number-offset:
-        description: the offset for incrementing the build number (i.e 33928997)
+      net_version:
+        required: true
         type: string
-        default: 40  
-      build-source-folder:
-        description: the folder location for the source (i.e. ./BudgetPlanner/BudgetPlanner.Droid)
+      project_name:
+        required: true
         type: string
-        default: .
-      build-project:
-        description: Project file to be built (i.e. BudgetPlanner.Droid.csproj )
+      net_droid_version:
+        required: true
         type: string
-        default: .      
-      appcenter_name:
-        description: the application name in android (i.e. budget-planner--android )
-        type: string
-        default: .
-      release_track:
-        description: The Google play release track to use
-        type: string
-        default: Production
+      package_name: 
+         required: true
+         type: string
     secrets:
-        KEYSTORE_ALIAS:
-          required : true
-        KEYSTORE:
-          required : true
-        KEYSTORE_PASSWORD:
-          required : true
-        APP_VERSION :
-          required : true        
-        APP_CENTER_TOKEN :
-          required : true
-      
+      KEYSTORE_ALIAS: 
+        required: true
+      KEYSTORE:
+        required: true
+      KEYSTORE_PASSWORD: 
+        required: true
+      PLAYSTORE_SERVICE_ACCOUNT:
+        required: true
       
 env:
   project-file: ${{ inputs.build-source-folder }}/${{ inputs.build-project }}
@@ -47,7 +32,6 @@ jobs:
   android-adhoc-build-deploy:      
     name:  Android Build & Deploy
     runs-on: windows-latest
-    if: github.event_name == 'push' && github.ref != 'refs/heads/master'
     steps:
       - name: Checkout
         uses: actions/checkout@v4    
@@ -58,38 +42,94 @@ jobs:
               java-version: '17'
               distribution: 'temurin'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Setup .NET Core ${{ inputs.net_version}} SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ inputs.net_version}}
+      - name: Install MAUI workload
+        run: dotnet workload install maui
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1.0.2
       - name: run number with offset
         id: get_buildnum
-        run: echo "::set-output name=buildnum::$((${{ github.run_number }}+${{ inputs.build-number-offset }} ))"     
-      - name: Set Android version
-        uses: damienaicheh/update-android-version-manifest-action@v1.0.0
+        run: echo "::set-output name=buildnum::$((${{ github.run_number }}+33928999))"   
+
+      - name: JSON to variables...
+        uses: antifree/json-to-variables@v1.0.1
         with:
-             android-manifest-path: ${{ inputs.build-source-folder }}/Properties/AndroidManifest.xml
-             version-name: ${{ secrets.APP_VERSION }}
-             version-code: ${{ steps.get_buildnum.outputs.buildnum }}
-      - name: Restore Android
-        run: msbuild /t:Restore /p:Configuration=Release /p:AndroidPackageFormat=aab ${{ env.project-file }}       
-      - name: Compile Android
-        run: msbuild /p:AndroidBuildApplicationPackage=True /p:Configuration=Release /p:AndroidPackageFormat=aab ${{ env.project-file }}        
-      - name: Sign App
-        uses: r0adkll/sign-android-release@v1
-        id: sign_app
+            filename: './${{ inputs.project_name }}/version.json'
+            prefix: appVersion
+
+      - name: Set Application Version
+        uses: managedcode/MAUIAppVersion@v1
         with:
-          releaseDirectory: ${{ inputs.build-source-folder }}/bin/Release
-          signingKeyBase64: ${{ secrets.KEYSTORE }}
-          alias: ${{ secrets.KEYSTORE_ALIAS }}
-          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEYSTORE_PASSWORD  }}
+          csproj: './${{ inputs.project_name }}/${{ inputs.project_name }}.csproj'
+          version: ${{ steps.get_buildnum.outputs.buildnum }} 
+          displayVersion: ${{ env.appVersion_version }}
+          printFile: true
+
+      - name: Decode Keystore
+        id: decode_keystore
+        uses: timheuer/base64-to-file@v1
+        with:
+          fileDir: ${{ runner.temp }}
+          fileName: 'kf.keystore'
+          encodedString: ${{ secrets.KEYSTORE }}          
+
+      - name: Install dependencies
+        run: dotnet restore
+
+      - name: Build Droid App
+        run: dotnet  publish ./${{ inputs.project_name }}/${{ inputs.project_name }}.csproj -f ${{ inputs.net_droid_version }} -c Release /p:AndroidKeyStore=true /p:AndroidSigningKeyStore='${{ runner.temp }}/kf.keystore' /p:AndroidSigningKeyAlias=${{ secrets.KEYSTORE_ALIAS }} /p:AndroidSigningKeyPass='${{ secrets.KEYSTORE_PASSWORD }}' /p:AndroidSigningStorePass='${{ secrets.KEYSTORE_PASSWORD }}' -o ./Output
+
+#      - name: Output Data
+#        run: echo ${{secrets.KEYSTORE_ALIAS}} | sed 's/./& /g'     
+     
+      - name: Get full filename ending with Signed.aab
+        id: find_file
+        shell: pwsh
+        run: |
+          $filename = Get-ChildItem -Path .\Output\ -Filter '*Signed.aab' | Select-Object -ExpandProperty FullName -First 1
+          if ($filename) {
+            Write-Output "File found: $filename"
+            echo "file_name=$filename" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          } else {
+            Write-Error "No file ending with Signed.aab found."
+          }      
+
       - name: Setup App Center CLI
-        run: npm install -g appcenter-cli
-      - name: Upload AddHoc Android app to App Center
         if: github.ref != 'refs/heads/main'
-        run: appcenter distribute release --file ${{steps.sign_app.outputs.signedReleaseFile}} --app ${{ inputs.appcenter_name }} --group Collaborators --token ${{ secrets.APP_CENTER_TOKEN }}
-      - name: Upload Android app to Play Store via App Center
+        run: npm install -g appcenter-cli
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: '${{ inputs.package_name}}.${{ env.appVersion_version }}-signed.aab'
+          path: ${{ env.file_name }}
+          retention-days: 10
+          overwrite: true
+          
+      - name: Set file path environment variable
+        env:
+          APP_FILE_PATH:  ${{ env.file_name }}
+        id: file-path
+        run: |
+          $New_Path = $env:APP_FILE_PATH.Replace('\', '/')
+          echo "New_Path=$New_Path" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+          
+      - uses: r0adkll/upload-google-play@v1
+        if: github.ref != 'refs/heads/main'
+        name: Upload Android Artifact to Play Console
+        with:
+            serviceAccountJsonPlainText: ${{ secrets.PLAYSTORE_SERVICE_ACCOUNT }}
+            packageName: ${{ inputs.package_name }}
+            releaseFiles: '${{ env.New_Path }}'
+            track: beta
+            
+      - uses: r0adkll/upload-google-play@v1
         if: github.ref == 'refs/heads/main'
-        run: appcenter distribute release --file ${{steps.sign_app.outputs.signedReleaseFile}} --app ${{ inputs.appcenter_name }} --store ${{ inputs.release_track }} --token ${{ secrets.APP_CENTER_TOKEN }}
+        name: Upload Android Artifact to Play Console
+        with:
+            serviceAccountJsonPlainText: ${{ secrets.PLAYSTORE_SERVICE_ACCOUNT }}
+            packageName: ${{ inputs.package_name }}
+            releaseFiles: '${{ env.New_Path }}'
+            track: production
