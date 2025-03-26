@@ -15,6 +15,9 @@ on:
       package_name: 
          required: true
          type: string
+      build_number_offset:
+        type: string
+        description: the offset for incrementing the build number (i.e 33928997)
     secrets:
       KEYSTORE_ALIAS: 
         required: true
@@ -51,7 +54,7 @@ jobs:
 
       - name: run number with offset
         id: get_buildnum
-        run: echo "::set-output name=buildnum::$((${{ github.run_number }}+33928999))"   
+        run: echo "::set-output name=buildnum::$((${{ github.run_number }}+${{ inputs.build_number_offset }}))"   
 
       - name: JSON to variables...
         uses: antifree/json-to-variables@v1.0.1
