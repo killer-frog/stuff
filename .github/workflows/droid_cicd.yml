@@ -27,6 +27,8 @@ on:
         required: true
       PLAYSTORE_SERVICE_ACCOUNT:
         required: true
+      Firebase_Key:
+        required: false
       
 env:
   project-file: ${{ inputs.build-source-folder }}/${{ inputs.build-project }}
@@ -120,10 +122,25 @@ jobs:
         run: |
           $New_Path = $env:APP_FILE_PATH.Replace('\', '/')
           echo "New_Path=$New_Path" | Out-File -FilePath $env:GITHUB_ENV -Append
+          
+      - name: Download Firebase CLI
+        if: ${{ secrets.FIREBASE_TOKEN != '' }}
+        run: |
+          curl -sL https://firebase.tools/win -o firebase-tools.exe
 
+      - name: Deploy to Firebase App Distribution
+        if: ${{ secrets.Firebase_Key != '' }}
+        env:
+          FIREBASE_TOKEN: ${{ secrets.Firebase_Key }}
+        run: |
+          .\firebase-tools.exe appdistribution:distribute ${{ env.New_Path }} `
+          --app 1:160312567992:android:82bfafc27969f675ea2c4d `
+          --groups Testers`
+          --release-notes "New build available"
           
       - uses: r0adkll/upload-google-play@v1
-        if: github.ref != 'refs/heads/main'
+        #if: github.ref != 'refs/heads/main'
+        if: false
         name: Upload Android Artifact to Play Console
         with:
             serviceAccountJsonPlainText: ${{ secrets.PLAYSTORE_SERVICE_ACCOUNT }}
@@ -132,7 +149,8 @@ jobs:
             track: beta
             
       - uses: r0adkll/upload-google-play@v1
-        if: github.ref == 'refs/heads/main'
+        if: false
+       # if: github.ref == 'refs/heads/main'
         name: Upload Android Artifact to Play Console
         with:
             serviceAccountJsonPlainText: ${{ secrets.PLAYSTORE_SERVICE_ACCOUNT }}
