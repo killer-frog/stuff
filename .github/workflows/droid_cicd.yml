@@ -124,7 +124,7 @@ jobs:
           echo "New_Path=$New_Path" | Out-File -FilePath $env:GITHUB_ENV -Append
           
       - name: Download Firebase CLI
-        if: ${{ secrets.FIREBASE_TOKEN != '' }}
+        if: ${{ secrets.Firebase_Key != '' }}
         run: |
           curl -sL https://firebase.tools/win -o firebase-tools.exe
 
