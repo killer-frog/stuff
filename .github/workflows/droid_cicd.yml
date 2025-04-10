@@ -18,6 +18,9 @@ on:
       build_number_offset:
         type: string
         description: the offset for incrementing the build number (i.e 33928997)
+      Firebase_Key:
+        type: string
+        description: Key for using Firebase Distributuon
     secrets:
       KEYSTORE_ALIAS: 
         required: true
@@ -27,8 +30,7 @@ on:
         required: true
       PLAYSTORE_SERVICE_ACCOUNT:
         required: true
-      Firebase_Key:
-        required: false
+      
       
 env:
   project-file: ${{ inputs.build-source-folder }}/${{ inputs.build-project }}
@@ -104,10 +106,6 @@ jobs:
             Write-Error "No file ending with Signed.aab found."
           }      
 
-      - name: Setup App Center CLI
-        if: github.ref != 'refs/heads/main'
-        run: npm install -g appcenter-cli
-
       - uses: actions/upload-artifact@v4
         with:
           name: '${{ inputs.package_name}}.${{ env.appVersion_version }}-signed.aab'
@@ -124,14 +122,14 @@ jobs:
           echo "New_Path=$New_Path" | Out-File -FilePath $env:GITHUB_ENV -Append
           
       - name: Download Firebase CLI
-        if: ${{ secrets.Firebase_Key != '' }}
+        if: ${{ inputs.Firebase_Key != '' }}
         run: |
           curl -sL https://firebase.tools/win -o firebase-tools.exe
 
       - name: Deploy to Firebase App Distribution
-        if: ${{ secrets.Firebase_Key != '' }}
+        if: ${{ inputs.Firebase_Key != '' }}
         env:
-          FIREBASE_TOKEN: ${{ secrets.Firebase_Key }}
+          FIREBASE_TOKEN: ${{ inputs.Firebase_Key}}
         run: |
           .\firebase-tools.exe appdistribution:distribute ${{ env.New_Path }} `
           --app 1:160312567992:android:82bfafc27969f675ea2c4d `
