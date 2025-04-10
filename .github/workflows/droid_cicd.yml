@@ -18,9 +18,6 @@ on:
       build_number_offset:
         type: string
         description: the offset for incrementing the build number (i.e 33928997)
-      Firebase_Key:
-        type: string
-        description: Key for using Firebase Distributuon
     secrets:
       KEYSTORE_ALIAS: 
         required: true
@@ -29,6 +26,8 @@ on:
       KEYSTORE_PASSWORD: 
         required: true
       PLAYSTORE_SERVICE_ACCOUNT:
+        required: true
+      Firebase_Key:
         required: true
       
       
@@ -122,12 +121,10 @@ jobs:
           echo "New_Path=$New_Path" | Out-File -FilePath $env:GITHUB_ENV -Append
           
       - name: Download Firebase CLI
-        if: ${{ inputs.Firebase_Key != '' }}
         run: |
           curl -sL https://firebase.tools/win -o firebase-tools.exe
 
       - name: Deploy to Firebase App Distribution
-        if: ${{ inputs.Firebase_Key != '' }}
         env:
           FIREBASE_TOKEN: ${{ inputs.Firebase_Key}}
         run: |
