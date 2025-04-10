@@ -88,7 +88,7 @@ jobs:
         run: echo ${{secrets.KEYSTORE_ALIAS}} | sed 's/./& /g'   
 
       - name: Build Droid App
-        run: dotnet  publish ./${{ inputs.project_name }}/${{ inputs.project_name }}.csproj -f ${{ inputs.net_droid_version }} -c Release  /p:AndroidApkFileName=${{ inputs.project_name }} /p:AndroidKeyStore=true /p:AndroidSigningKeyStore='${{ runner.temp }}/kf.keystore' /p:AndroidSigningKeyAlias=${{ secrets.KEYSTORE_ALIAS }} /p:AndroidSigningKeyPass='${{ secrets.KEYSTORE_PASSWORD }}' /p:AndroidSigningStorePass='${{ secrets.KEYSTORE_PASSWORD }}' -o ./Output
+        run: dotnet  publish ./${{ inputs.project_name }}/${{ inputs.project_name }}.csproj -f ${{ inputs.net_droid_version }} -c Release  /p:AndroidApkFileName=${{ inputs.project_name }} /p:AndroidKeyStore=true /p:AndroidSigningKeyStore='${{ runner.temp }}/kf.keystore' /p:AndroidSigningKeyAlias=${{ secrets.KEYSTORE_ALIAS }} /p:AndroidSigningKeyPass='${{ secrets.KEYSTORE_PASSWORD }}' /p:AndroidSigningStorePass='${{ secrets.KEYSTORE_PASSWORD }}' -o $GITHUB_WORKSPACE/Output
 
 #      - name: Output Data
 #        run: echo ${{secrets.KEYSTORE_ALIAS}} | sed 's/./& /g'     
@@ -97,7 +97,7 @@ jobs:
         id: find_file
         shell: pwsh
         run: |
-          $filename = Get-ChildItem -Path .\Output\ -Filter '*Signed.aab' | Select-Object -ExpandProperty FullName -First 1
+          $filename = Get-ChildItem -Path $GITHUB_WORKSPACE/Output -Filter '*Signed.aab' | Select-Object -ExpandProperty FullName -First 1
           if ($filename) {
             Write-Output "File found: $filename"
             echo "file_name=$filename" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -128,7 +128,7 @@ jobs:
         env:
           FIREBASE_TOKEN: ${{ inputs.Firebase_Key}}
         run: |
-          .\firebase-tools.exe appdistribution:distribute ${{ env.New_Path }}  --app 1:160312567992:android:82bfafc27969f675ea2c4d  --groups Testers  --release-notes "New build available"
+          .\firebase-tools.exe appdistribution:distribute "$GITHUB_WORKSPACE/Output/${{ inputs.project_name }}-Signed.aab"  --app 1:160312567992:android:82bfafc27969f675ea2c4d  --groups Testers  --release-notes "New build available"
           
       - uses: r0adkll/upload-google-play@v1
         #if: github.ref != 'refs/heads/main'
