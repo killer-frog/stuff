@@ -29,8 +29,7 @@ on:
         required: true
       Firebase_Key:
         required: true
-      
-      
+       
 env:
   project-file: ${{ inputs.build-source-folder }}/${{ inputs.build-project }}
   
@@ -133,11 +132,13 @@ jobs:
             # Get the commit message
             $commitMessage = git log -1 --pretty='%B'
             Write-Host "##vso[task.setvariable variable=CommitMessage]$commitMessage"
+            
             # Authenticate using the Firebase service account
             $env:GOOGLE_APPLICATION_CREDENTIALS = "${{ secrets.Firebase_Key }}"
+            Write-Host "Firebase Key: $env:GOOGLE_APPLICATION_CREDENTIALS"
 
             # Distribute APK to Firebase
-            firebase appdistribution:distribute $GITHUB_WORKSPACE\Output\${{ inputs.project_name }}-Signed.aab --app 1:160312567992:android:82bfafc27969f675ea2c4d --groups "Testing" --release-notes "Smoke Testing in preperation for release ($commitMessage)"
+            firebase appdistribution:distribute ${{ env.file_name }} --app 1:160312567992:android:82bfafc27969f675ea2c4d --groups "Testing" --release-notes "Smoke Testing in preperation for release ($commitMessage)"
      
       - uses: r0adkll/upload-google-play@v1
         #if: github.ref != 'refs/heads/main'
