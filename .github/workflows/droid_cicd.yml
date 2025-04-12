@@ -121,16 +121,23 @@ jobs:
 
       - name: Setup Google Cloud Credentials
         run: echo "${{ secrets.Firebase_Key }}" > ${{ runner.temp }}/gcloud.json
+
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+            credentials_json: '${{ secrets.Firebase_Key }}'
           
       - name: Distribute to Firebase for testing
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/gcloud.json
+#        env:
+#          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/gcloud.json
         run: |
             # Check Firebase CLI installation and install if necessary
             npm install -g firebase-tools
 
             # Verify installation
             firebase --version
+
+            gc  ${{ runner.temp }}/gcloud.json
 
             ls $GITHUB_WORKSPACE\Output
 
