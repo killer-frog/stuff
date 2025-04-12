@@ -120,8 +120,6 @@ jobs:
           echo "New_Path=$New_Path" | Out-File -FilePath $env:GITHUB_ENV -Append
           
       - name: Distribute to Firebase for testing
-        env:
-           FIREBASE_TOKEN: ${{ secrets.Firebase_Key }}
         run: |
             # Check Firebase CLI installation and install if necessary
             npm install -g firebase-tools
@@ -136,7 +134,8 @@ jobs:
             Write-Host "##vso[task.setvariable variable=CommitMessage]$commitMessage"
             
             # Authenticate using the Firebase service account
-            $env:GOOGLE_APPLICATION_CREDENTIALS = "${{ secrets.Firebase_Key }}"
+            echo "${{ secrets.Firebase_Key }}" > $GOOGLE_APPLICATION_CREDENTIALS
+            # $env:GOOGLE_APPLICATION_CREDENTIALS = "${{ secrets.Firebase_Key }}"
             Write-Host "Firebase Key: $env:GOOGLE_APPLICATION_CREDENTIALS"
 
             # Distribute APK to Firebase
