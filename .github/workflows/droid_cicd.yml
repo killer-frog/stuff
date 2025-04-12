@@ -120,7 +120,7 @@ jobs:
           echo "New_Path=$New_Path" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Setup Google Cloud Credentials
-        run: echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}" > ${{ runner.temp }}/gcloud.json
+        run: echo "${{ secrets.Firebase_Key }}" > ${{ runner.temp }}/gcloud.json
           
       - name: Distribute to Firebase for testing
         env:
