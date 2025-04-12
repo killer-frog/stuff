@@ -120,6 +120,8 @@ jobs:
           echo "New_Path=$New_Path" | Out-File -FilePath $env:GITHUB_ENV -Append
           
       - name: Distribute to Firebase for testing
+        env:
+           FIREBASE_TOKEN: ${{ secrets.Firebase_Key }}
         run: |
             # Check Firebase CLI installation and install if necessary
             npm install -g firebase-tools
