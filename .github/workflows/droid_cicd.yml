@@ -139,7 +139,7 @@ jobs:
             Write-Host "##vso[task.setvariable variable=CommitMessage]$commitMessage"
   
             # Distribute APK to Firebase
-            firebase appdistribution:distribute ${{ env.file_name }} --app 1:160312567992:android:82bfafc27969f675ea2c4d --groups "Testing" --release-notes "Smoke Testing in preperation for release ($commitMessage)"
+            firebase appdistribution:distribute ${{ env.file_name }} --app 1:160312567992:android:82bfafc27969f675ea2c4d --groups "Testers" --release-notes "Smoke Testing in preperation for release ($commitMessage)"
      
       - uses: r0adkll/upload-google-play@v1
         #if: github.ref != 'refs/heads/main'
