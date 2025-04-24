@@ -18,6 +18,9 @@ on:
       build_number_offset:
         type: string
         description: the offset for incrementing the build number (i.e 33928997)
+      firebase_app_id:
+        type: string
+        description: Firebase App Id for App Distribution 
     secrets:
       KEYSTORE_ALIAS: 
         required: true
@@ -139,7 +142,7 @@ jobs:
             Write-Host "##vso[task.setvariable variable=CommitMessage]$commitMessage"
   
             # Distribute APK to Firebase
-            firebase appdistribution:distribute ${{ env.file_name }} --app 1:160312567992:android:82bfafc27969f675ea2c4d --groups "Testers" --release-notes "Smoke Testing in preperation for release ($commitMessage)"
+            firebase appdistribution:distribute ${{ env.file_name }} --app ${{ inputs.firebase_app_id }} --groups "Testers" --release-notes "Smoke Testing in preperation for release ($commitMessage)"
      
       - uses: r0adkll/upload-google-play@v1
         #if: github.ref != 'refs/heads/main'
