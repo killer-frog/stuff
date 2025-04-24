@@ -1,0 +1,117 @@
+name: Build and Deploy iOS (MAUI App)
+
+on:
+  workflow_call:
+    inputs:
+      net_version:
+        required: true
+        type: string
+      project_name:
+        required: true
+        type: string
+      net_ios_version:
+        required: true
+        type: string
+      bundle_id:
+        required: true
+        type: string
+      xcode_version
+        required: true
+        type: string
+      firebase_app_id:
+        type: string
+        description: Firebase App Id for App Distribution 
+
+  iOS_Build_Deploy:
+    name:  iOS Build & Deploy
+    runs-on: macos-15
+    if: github.event_name == 'push'
+    env:
+      publish_type:  ${{ github.ref == 'refs/heads/main' && 'IOS_APP_STORE' || 'IOS_APP_ADHOC' }}
+      CompileConstant:  ${{ github.ref == 'refs/heads/main' && 'Not' || 'ASH' }}
+      KEYCHAIN: job-${{ github.job }}-${{ github.run_id	}}-${{ github.run_number }}-${{ github.run_attempt }}
+    steps:
+      - name: Output var..
+        run: echo ${{ env.publish_type }}
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set XCode version
+        uses: maxim-lobanov/setup-xcode@v1
+        if: ${{ !github.event.act }}        
+        with:
+          xcode-version: ${{ inputs.xcode_version }}
+        
+      - name: Setup .NET Core ${{ inputs.DOTNETVERSION }} SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ inputs.DOTNETVERSION }}
+      - name: Install MAUI workload
+        run: dotnet workload install maui
+
+      - name: JSON to variables...
+        uses: antifree/json-to-variables@v1.0.1
+        with:
+          filename: './${{ inputs.project_name }}/version.json'
+          prefix: appVersion
+          
+      - name: Set Application Version    
+        uses: managedcode/MAUIAppVersion@v1
+        with:
+          csproj: './${{ inputs.project_name }}/${{ inputs.project_name }}.csproj'
+          version: ${{ github.run_number  }}
+          displayVersion: ${{ env.appVersion_version }}
+          printFile: true
+          
+      - name: Delete keychain if already exists
+        if: always()
+        run: |
+          KEYCHAIN_PATH="${HOME}/Library/Keychains/signing_temp.keychain-db"
+
+          if [ -e "$KEYCHAIN_PATH" ]; then
+            echo "Keychain exists at $KEYCHAIN_PATH. Deleting..."
+            security delete-keychain "$KEYCHAIN_PATH"
+          else
+            echo "Keychain does not exist. No action needed."
+          fi
+      - name: Load Apple Signing Certificate
+        uses: apple-actions/import-codesign-certs@v2
+        with:
+           p12-file-base64: ${{ secrets.iOS_cert }}
+           p12-password: ${{ secrets.ios_p12_password }}
+     
+      - name: Download Provisioning Profiles
+        id: provisioning
+        uses: apple-actions/download-provisioning-profiles@v1
+        with:
+          bundle-id: ${{ inputs.bundle_id }}
+          profile-type: ${{ env.publish_type }}
+          issuer-id: ${{ secrets.appstore_issuer }}
+          api-key-id: ${{ secrets.appstore_keyid }}
+          api-private-key: ${{ secrets.appstore_private_key }}      
+
+      - name: Build iOS App
+        run: dotnet  publish ./${{ inputs.project_name }}/${{ inputs.project_name }}.csproj -f ${{ inputs.Net_IOS_Version }}  -c Release -o ./Output /p:DefineConstants=${{ env.CompileConstant }} /p:IpaPackageName=${{ inputs.project_name }}.ipa      
+        
+      - name: Install Sentry CLI
+        run: |
+          curl -sL https://sentry.io/get-cli/ | bash
+
+      - name: Upload dSYM files to Sentry
+        env:
+           SENTRY_AUTH_TOKEN: ${{ secrets.Serial_Auth }}
+        run: |
+          export SENTRY_ORG=killerfrog
+          export SENTRY_PROJECT=budget-plnr
+          find . -name "${{ inputs.project_name }}.app.dSYM"
+          find . -name "${{ inputs.project_name }}.app.dSYM"  -exec cp -r {} ./Output/ \;
+          sentry-cli upload-dif --org $SENTRY_ORG --project $SENTRY_PROJECT --auth-token $SENTRY_AUTH_TOKEN --include-sources --log-level=info ./Output/${{ inputs.project_name }}.app.dSYM
+     
+      - name: Upload app to TestFlight
+        if: github.ref == 'refs/heads/main'
+        uses: apple-actions/upload-testflight-build@v1
+        with:
+          app-path: ./Output/${{ inputs.project_name }}.ipa
+          issuer-id: ${{ secrets.appstore_issuer }}
+          api-key-id: ${{ secrets.appstore_keyid  }}
+          api-private-key: ${{ secrets.appstore_private_key }}
