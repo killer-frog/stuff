@@ -36,7 +36,6 @@ jobs:
   iOS_Build_Deploy:
     name:  iOS Build & Deploy
     runs-on: macos-15
-    if: github.event_name == 'push'
     env:
       publish_type:  ${{ github.ref == 'refs/heads/main' && 'IOS_APP_STORE' || 'IOS_APP_ADHOC' }}
       CompileConstant:  ${{ github.ref == 'refs/heads/main' && 'Not' || 'ASH' }}
