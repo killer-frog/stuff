@@ -21,6 +21,19 @@ on:
       firebase_app_id:
         type: string
         description: Firebase App Id for App Distribution 
+    secrets:
+        iOS_cert:
+          required:true
+        ios_p12_password:
+          required:true  
+        Serial_Auth:
+          required:true  
+        appstore_private_key:
+          required:true  
+        appstore_keyid:
+          required:true  
+        appstore_issuer:
+          required:true      
 
   iOS_Build_Deploy:
     name:  iOS Build & Deploy
@@ -102,7 +115,7 @@ on:
            SENTRY_AUTH_TOKEN: ${{ secrets.Serial_Auth }}
         run: |
           export SENTRY_ORG=killerfrog
-          export SENTRY_PROJECT=budget-plnr
+          export SENTRY_PROJECT=${{ inputs.project_name }}
           find . -name "${{ inputs.project_name }}.app.dSYM"
           find . -name "${{ inputs.project_name }}.app.dSYM"  -exec cp -r {} ./Output/ \;
           sentry-cli upload-dif --org $SENTRY_ORG --project $SENTRY_PROJECT --auth-token $SENTRY_AUTH_TOKEN --include-sources --log-level=info ./Output/${{ inputs.project_name }}.app.dSYM
