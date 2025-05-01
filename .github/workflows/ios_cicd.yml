@@ -18,15 +18,12 @@ on:
       xcode_version:
         required: true
         type: string
-      firebase_app_id:
-        type: string
-        description: Firebase App Id for App Distribution 
     secrets:
         iOS_cert:
           required : true
         ios_p12_password:
           required : true  
-        Serial_Auth:
+        Sentry_Auth:
           required : true  
         appstore_private_key:
           required : true  
@@ -113,7 +110,7 @@ jobs:
 
       - name: Upload dSYM files to Sentry
         env:
-           SENTRY_AUTH_TOKEN: ${{ secrets.Serial_Auth }}
+           SENTRY_AUTH_TOKEN: ${{ secrets.Sentry_Auth }}
         run: |
           export SENTRY_ORG=killerfrog
           export SENTRY_PROJECT=${{ inputs.project_name }}
