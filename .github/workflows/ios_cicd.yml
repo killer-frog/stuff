@@ -15,7 +15,7 @@ on:
       bundle_id:
         required: true
         type: string
-      xcode_version
+      xcode_version:
         required: true
         type: string
       firebase_app_id:
@@ -23,18 +23,19 @@ on:
         description: Firebase App Id for App Distribution 
     secrets:
         iOS_cert:
-          required:true
+          required : true
         ios_p12_password:
-          required:true  
+          required : true  
         Serial_Auth:
-          required:true  
+          required : true  
         appstore_private_key:
-          required:true  
+          required : true  
         appstore_keyid:
-          required:true  
+          required : true  
         appstore_issuer:
-          required:true      
+          required : true      
 
+jobs:
   iOS_Build_Deploy:
     name:  iOS Build & Deploy
     runs-on: macos-15
@@ -55,10 +56,10 @@ on:
         with:
           xcode-version: ${{ inputs.xcode_version }}
         
-      - name: Setup .NET Core ${{ inputs.DOTNETVERSION }} SDK
+      - name: Setup .NET Core ${{ inputs.net_version }} SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: ${{ inputs.DOTNETVERSION }}
+          dotnet-version: ${{ inputs.net_version }}
       - name: Install MAUI workload
         run: dotnet workload install maui
 
