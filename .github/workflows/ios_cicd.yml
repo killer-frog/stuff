@@ -20,17 +20,17 @@ on:
         type: string
     secrets:
         iOS_cert:
-          required : true
+          required: true
         ios_p12_password:
-          required : true  
+          required: true  
         Sentry_Auth:
-          required : true  
+          required: true  
         appstore_private_key:
-          required : true  
+          required: true  
         appstore_keyid:
-          required : true  
+          required: true  
         appstore_issuer:
-          required : true      
+          required: true      
 
 jobs:
   iOS_Build_Deploy:
