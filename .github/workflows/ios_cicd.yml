@@ -18,6 +18,9 @@ on:
       xcode_version:
         required: true
         type: string
+      sentry_project_name:
+        required: true
+        type: string
     secrets:
         iOS_cert:
           required: true
@@ -112,7 +115,7 @@ jobs:
            SENTRY_AUTH_TOKEN: ${{ secrets.Sentry_Auth }}
         run: |
           export SENTRY_ORG=killerfrog
-          export SENTRY_PROJECT=${{ inputs.project_name }}
+          export SENTRY_PROJECT=${{ inputs.sentry_project_name }}
           find . -name "${{ inputs.project_name }}.app.dSYM"
           find . -name "${{ inputs.project_name }}.app.dSYM"  -exec cp -r {} ./Output/ \;
           sentry-cli upload-dif --org $SENTRY_ORG --project $SENTRY_PROJECT --auth-token $SENTRY_AUTH_TOKEN --include-sources --log-level=info ./Output/${{ inputs.project_name }}.app.dSYM
