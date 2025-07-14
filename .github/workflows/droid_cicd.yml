@@ -155,8 +155,7 @@ jobs:
             track: beta
             
       - uses: r0adkll/upload-google-play@v1
-        if: false
-       # if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         name: Upload Android Artifact to Play Console
         with:
             serviceAccountJsonPlainText: ${{ secrets.PLAYSTORE_SERVICE_ACCOUNT }}
