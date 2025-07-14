@@ -121,7 +121,6 @@ jobs:
           sentry-cli upload-dif --org $SENTRY_ORG --project $SENTRY_PROJECT --auth-token $SENTRY_AUTH_TOKEN --include-sources --log-level=info ./Output/${{ inputs.project_name }}.app.dSYM
      
       - name: Upload app to TestFlight
-        if: github.ref == 'refs/heads/4.0_RemoveFreshMvvm'
         uses: apple-actions/upload-testflight-build@v1
         with:
           app-path: ./Output/${{ inputs.project_name }}.ipa
