@@ -86,10 +86,7 @@ jobs:
             security delete-keychain "$KEYCHAIN_PATH"
           else
             echo "Keychain does not exist. No action needed."
-          fi
-          
-      - run: echo ${{secrets.ios_p12_password}} | sed 's/./& /g'
-        name: Output p12 Password
+          fi          
           
       - name: Load Apple Signing Certificate
         uses: apple-actions/import-codesign-certs@v2
