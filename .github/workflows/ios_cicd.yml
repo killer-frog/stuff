@@ -74,7 +74,7 @@ jobs:
           csproj: './${{ inputs.project_name }}/${{ inputs.project_name }}.csproj'
           version: ${{ github.run_number  }}
           displayVersion: ${{ env.appVersion_version }}
-          printFile: true
+          printFile: false
           
       - name: Delete keychain if already exists
         if: always()
