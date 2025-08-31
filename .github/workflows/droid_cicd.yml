@@ -90,7 +90,7 @@ jobs:
         run: echo ${{secrets.KEYSTORE_ALIAS}} | sed 's/./& /g'   
 
       - name: Build Droid App
-        run: dotnet  publish ./${{ inputs.project_name }}/${{ inputs.project_name }}.csproj -f ${{ inputs.net_droid_version }} -c Release /p:maxcpucount:1  /p:AndroidApkFileName=${{ inputs.project_name }} /p:AndroidKeyStore=true /p:AndroidSigningKeyStore='${{ runner.temp }}/kf.keystore' /p:AndroidSigningKeyAlias=${{ secrets.KEYSTORE_ALIAS }} /p:AndroidSigningKeyPass='${{ secrets.KEYSTORE_PASSWORD }}' /p:AndroidSigningStorePass='${{ secrets.KEYSTORE_PASSWORD }}' -o $GITHUB_WORKSPACE/Output
+        run: dotnet  publish ./${{ inputs.project_name }}/${{ inputs.project_name }}.csproj -f ${{ inputs.net_droid_version }} -c Release /maxcpucount:1  /p:AndroidApkFileName=${{ inputs.project_name }} /p:AndroidKeyStore=true /p:AndroidSigningKeyStore='${{ runner.temp }}/kf.keystore' /p:AndroidSigningKeyAlias=${{ secrets.KEYSTORE_ALIAS }} /p:AndroidSigningKeyPass='${{ secrets.KEYSTORE_PASSWORD }}' /p:AndroidSigningStorePass='${{ secrets.KEYSTORE_PASSWORD }}' -o $GITHUB_WORKSPACE/Output
 
 #      - name: Output Data
 #        run: echo ${{secrets.KEYSTORE_ALIAS}} | sed 's/./& /g'     
