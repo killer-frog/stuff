@@ -105,7 +105,7 @@ jobs:
           api-private-key: ${{ secrets.appstore_private_key }}      
 
       - name: Build iOS App
-        run: dotnet  publish ./${{ inputs.project_name }}/${{ inputs.project_name }}.csproj  -c Release -o ./Output /p:DefineConstants=${{ env.CompileConstant }} /p:IpaPackageName=${{ inputs.project_name }}.ipa      
+        run: dotnet  publish ./${{ inputs.project_name }}/${{ inputs.project_name }}.csproj -f ${{ inputs.Net_IOS_Version }}  -c Release -o ./Output /p:DefineConstants=${{ env.CompileConstant }} /p:IpaPackageName=${{ inputs.project_name }}.ipa      
         
       - name: Install Sentry CLI
         run: |
