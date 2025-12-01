@@ -117,6 +117,7 @@ jobs:
         run: |
           export SENTRY_ORG=killerfrog
           export SENTRY_PROJECT=${{ inputs.sentry_project_name }}
+          ls ./Output
           find . -name "${{ inputs.project_name }}.app.dSYM"
           find . -name "${{ inputs.project_name }}.app.dSYM"  -exec cp -r {} ./Output/ \;
           sentry-cli upload-dif --org $SENTRY_ORG --project $SENTRY_PROJECT --auth-token $SENTRY_AUTH_TOKEN --include-sources --log-level=info ./Output/${{ inputs.project_name }}.app.dSYM
