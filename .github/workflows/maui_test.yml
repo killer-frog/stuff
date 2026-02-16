@@ -31,5 +31,5 @@ jobs:
       run: pwd
 
     - name: Unit Tests
-      run: dotnet test ${{ inputs.project_name }}.Tests/${{ inputs.project_name }}.Tests.csproj --verbosity Minimal
+      run: dotnet test ${{ inputs.project_name }}.Tests/${{ inputs.project_name }}.Tests.csproj -c Release --verbosity Minimal
   
