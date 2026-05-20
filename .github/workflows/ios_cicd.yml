@@ -18,6 +18,10 @@ on:
       xcode_version:
         required: true
         type: string
+      xcode_pre_release:
+        required: false
+        type: boolean
+        default: false
       sentry_project_name:
         required: true
         type: string
@@ -49,11 +53,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set XCode version
+      - name: Set XCode version (stable)
         uses: maxim-lobanov/setup-xcode@v1
-        if: ${{ !github.event.act }}        
+        if: ${{ !github.event.act && !inputs.xcode_pre_release }}
         with:
           xcode-version: ${{ inputs.xcode_version }}
+
+      - name: Set XCode version (pre-release)
+        if: ${{ !github.event.act && inputs.xcode_pre_release }}
+        run: |
+          XCODE_VERSION_SHORT=$(echo "${{ inputs.xcode_version }}" | cut -d. -f1-2)
+          XCODE_APP=$(ls -d /Applications/Xcode_${XCODE_VERSION_SHORT}*.app 2>/dev/null | sort | tail -1)
+          if [ -z "$XCODE_APP" ]; then
+            echo "No Xcode found matching version ${XCODE_VERSION_SHORT}"
+            exit 1
+          fi
+          echo "Selected Xcode: $XCODE_APP"
+          sudo xcode-select -s "$XCODE_APP/Contents/Developer"
+          xcodebuild -version
         
       - name: Setup .NET Core ${{ inputs.net_version }} SDK
         uses: actions/setup-dotnet@v4
