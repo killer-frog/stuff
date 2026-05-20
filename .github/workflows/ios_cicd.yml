@@ -22,6 +22,10 @@ on:
         required: false
         type: boolean
         default: false
+      maui_workload_version:
+        required: false
+        type: string
+        default: ''
       sentry_project_name:
         required: true
         type: string
@@ -78,7 +82,12 @@ jobs:
         with:
           dotnet-version: ${{ inputs.net_version }}
       - name: Install MAUI workload
-        run: dotnet workload install maui
+        run: |
+          if [ -n "${{ inputs.maui_workload_version }}" ]; then
+            dotnet workload install maui --version ${{ inputs.maui_workload_version }}
+          else
+            dotnet workload install maui
+          fi
 
       - name: JSON to variables...
         uses: antifree/json-to-variables@v1.0.1
