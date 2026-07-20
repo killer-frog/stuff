@@ -148,14 +148,15 @@ jobs:
             serviceAccountJsonPlainText: ${{ secrets.PLAYSTORE_SERVICE_ACCOUNT }}
             packageName: ${{ inputs.package_name }}
             releaseFiles: '${{ env.New_Path }}'
-            track: beta
+            tracks: beta
+            changesNotSentForReview: true
             
       - uses: r0adkll/upload-google-play@v1
         if: github.ref == 'refs/heads/main'
-        name: Upload Android Artifact to Play Console
+        name: Upload Android Artifact to Play Console for Production
         with:
             serviceAccountJsonPlainText: ${{ secrets.PLAYSTORE_SERVICE_ACCOUNT }}
             packageName: ${{ inputs.package_name }}
             releaseFiles: '${{ env.New_Path }}'
-            track: production
+            tracks: production
             changesNotSentForReview: true
