@@ -158,3 +158,4 @@ jobs:
             packageName: ${{ inputs.package_name }}
             releaseFiles: '${{ env.New_Path }}'
             track: production
+            changesNotSentForReview: true
